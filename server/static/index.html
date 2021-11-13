@@ -1,0 +1,282 @@
+<html>
+  <head>
+    <title>Jataka Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.0.2/echarts.min.js"></script>
+    
+    <style>
+
+      body {
+        background-color: rgb(241, 244, 249);
+        font-family: 'Inter', sans-serif;
+        color: rgb(22, 27, 34);
+        margin-top: 69px;
+      }
+      
+      h1 {
+        color: rgb(15, 26, 42);
+      }
+      </style>
+    
+    
+  </head>
+
+  <body>
+    <div style="text-align:center">
+      <h1 style="font-size: 69;">Jataka Dashboard</h1>
+      <p style="font-family: monospace; font-size: medium;">
+        Server rendering time: {{ .server_time }}
+      </p>
+
+      <div style="
+        overflow-y: scroll;
+        height: 100px;
+        background: rgba(255, 255, 255);
+        padding-top: 20;
+        padding-bottom: 20;
+        margin-left: 100px;
+        margin-right: 100px;
+        margin-bottom: 10px;
+        border-radius: 20px;
+        " id="job_ids"> </div>
+      <button id="log-button" onclick="update_job_id()" style="
+        width: 200px;
+        background: #42aaff;
+        border-radius: 10px;
+        border: 0px ;
+        height: 35px;
+        ">Update</button>
+
+      <p>
+        This is a simple dashboard for creating reports in the Jataka project.
+      </p>
+      
+
+      <h3>Training</h3>
+      <div id="train_loss" style="height:200px;"></div>
+      
+      <h3>Eval</h3>
+      <div id="test_loss" style="height:200px;"></div>
+      
+      <h3>Deployments</h3>
+      <div id="deployment_stats" style="height:200px;"></div>
+    </div>
+
+
+    <script type="text/javascript">
+
+      // get all the job ids from the server and display them
+      function update_job_id() {
+        fetch("http://localhost:8989/get_job_ids").then(response => response.json()).then(data => {
+          job_ids = data["job_ids"].sort();
+          document.getElementById("job_ids").innerHTML = "";
+          for (i = 0; i < job_ids.length; i++) {
+            var element = document.getElementById("job_ids");
+            // innerHTML will be checkbox with value job_id and on click will call update_job_id() with that value
+            var input = document.createElement("div", options={
+              name: "job_id-"+job_ids[i],
+            });
+            input.innerHTML = "<input type='checkbox' value='"+job_ids[i]+"' onclick='register_job_id(this.value)'>"+job_ids[i];
+            console.log(input);
+            element.appendChild(input);
+          }
+        })
+      }
+
+      chart_toggles = {}
+      job_toggles = {}
+
+      function register_job_id(job_id) {
+        console.log("registering job id: "+job_id);
+        if (job_toggles[job_id] == undefined) {
+          job_toggles[job_id] = true;
+        } else {
+          job_toggles[job_id] = !job_toggles[job_id];
+        }
+        console.log(job_toggles);
+      }
+
+      function register_charts_for_job(job_id) {
+
+      }
+
+      function render_charts_for_toggles() {
+        // this is a big ass method that:
+        // a) that checks the current charts and toggles and unrenders the ones right now
+        // b) gets the data from the server for that particular job id
+
+        // first, get mismatch between current toggles and current charts
+        var toggles = Object.keys(job_toggles);
+        var charts = Object.keys(chart_toggles);
+        var to_remove = [];
+        var to_add = [];
+        for (i = 0; i < charts.length; i++) {
+          if (toggles.indexOf(charts[i]) == -1) {
+            to_remove.push(charts[i]);
+          }
+        }
+
+        // second remove the charts that are not needed
+        for (i = 0; i < to_remove.length; i++) {
+          chart_toggles[to_remove[i]] = false;
+          document.getElementById(to_remove[i]).style.display = "none";
+        }
+
+        // third, get the data for the new charts
+
+      }
+
+      update_job_id()
+
+
+
+
+      // // code here for training charts
+      // console.log("Making Train Loss Chart");
+      // var train_loss_chart = echarts.init(document.getElementById('train_loss'));
+      // var train_data = [];
+      // console.log(train_loss_chart)
+      // train_loss_chart.setOption({
+      //   title: {},
+      //   tooltip: {
+      //     trigger: 'axis',
+      //   },
+      //   xAxis: {
+      //     // type: 'time',
+      //     splitLine: {
+      //       show: true
+      //     }
+      //   },
+      //   yAxis: {
+      //     // type: 'value',
+      //     boundaryGap: [0, '100%'],
+      //     splitLine: {
+      //       show: false
+      //     }
+      //   },
+      //   series: [{
+      //     name: 'Fake Data',
+      //     type: 'line',
+      //     showSymbol: false,
+      //     data: train_data
+      //   }]
+      // });
+
+      // // code here for Testing charts
+      // console.log("Making Train Loss Chart");
+      // var test_loss_chart = echarts.init(document.getElementById('test_loss'));
+      // var test_data = [];
+      // console.log(test_loss_chart)
+      // test_loss_chart.setOption({
+      //   title: {},
+      //   tooltip: {
+      //     trigger: 'axis',
+      //   },
+      //   xAxis: {
+      //     // type: 'time',
+      //     splitLine: {
+      //       show: true
+      //     }
+      //   },
+      //   yAxis: {
+      //     // type: 'value',
+      //     boundaryGap: [0, '100%'],
+      //     splitLine: {
+      //       show: false
+      //     }
+      //   },
+      //   series: [{
+      //     name: 'Fake Data',
+      //     type: 'line',
+      //     showSymbol: false,
+      //     data: test_data
+      //   }]
+      // });
+
+      // // code here for Deployment charts
+      // console.log("Making Train Loss Chart");
+      // var deployment_stats_chart = echarts.init(document.getElementById('deployment_stats'));
+      // var deployment_data = [];
+      // console.log(deployment_stats_chart)
+      // deployment_stats_chart.setOption({
+      //   title: {},
+      //   tooltip: {
+      //     trigger: 'axis',
+      //   },
+      //   xAxis: {
+      //     // type: 'time',
+      //     splitLine: {
+      //       show: true
+      //     }
+      //   },
+      //   yAxis: {
+      //     // type: 'value',
+      //     boundaryGap: [0, '100%'],
+      //     splitLine: {
+      //       show: false
+      //     }
+      //   },
+      //   series: [{
+      //     name: 'Fake Data',
+      //     type: 'line',
+      //     showSymbol: false,
+      //     data: deployment_data
+      //   }]
+      // });
+
+      // setInterval(function () {
+      //   fetch("http://localhost:8989/random_data", {
+      //     method: "GET",
+      //   }).then( response =>  {
+      //     return response.json();
+      //   }).then( _res_data => {
+      //     for (var i = 0; i < _res_data["data"].length; i++) {
+      //       train_data.push([
+      //       train_data.length,
+      //         _res_data["data"][i]
+      //       ]);
+      //     }
+      //     train_loss_chart.setOption({series: [{ data: train_data }] });
+      //   })
+      // }, 1000);
+
+      // setInterval(function () {
+      //   fetch("http://localhost:8989/random_data", {
+      //     method: "GET",
+      //   }).then( response =>  {
+      //     return response.json();
+      //   }).then( _res_data => {
+      //     for (var i = 0; i < _res_data["data"].length; i++) {
+      //       test_data.push([
+      //         test_data.length + 1,
+      //         _res_data["data"][i]
+      //       ]);
+      //     }
+      //     test_loss_chart.setOption({series: [{ data: test_data }] });
+      //   })
+      // }, 2000);
+
+      // setInterval(function () {
+      //   fetch("http://localhost:8989/random_data", {
+      //     method: "GET",
+      //   }).then( response =>  {
+      //     return response.json();
+      //   }).then( _res_data => {
+      //     for (var i = 0; i < _res_data["data"].length; i++) {
+      //       deployment_data.push([
+      //         deployment_data.length + 1,
+      //         _res_data["data"][i]
+      //       ]);
+      //     }
+      //     deployment_stats_chart.setOption({series: [{ data: deployment_data }] });
+      //   })
+      // }, 3000);
+    </script>
+  
+  </body>
+
+</html>
+
